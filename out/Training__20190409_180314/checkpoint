@@ -1,0 +1,3 @@
+model_checkpoint_path: "autoencoder_latest"
+all_model_checkpoint_paths: "autoencoder_best"
+all_model_checkpoint_paths: "autoencoder_latest"
