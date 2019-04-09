@@ -42,7 +42,7 @@ def display_autoencoder(orig, pred):
 
 # Training Parameters
 mode = args.mode
-max_epochs = 100
+max_epochs = 200
 batchsize = 64
 learning_rate = 0.001
 if args.model:
@@ -57,7 +57,7 @@ train_images = fashion_mnist_utils.extract_images('./data/train-images-idx3-ubyt
 test_images = fashion_mnist_utils.extract_images('./data/t10k-images-idx3-ubyte.gz', 10000)
 train_labels = fashion_mnist_utils.extract_labels('./data/train-labels-idx1-ubyte.gz', 60000)
 test_labels = fashion_mnist_utils.extract_labels('./data/t10k-labels-idx1-ubyte.gz', 10000)
-train_X, val_X, train_Y, val_Y = train_test_split(train_images, train_images, test_size=0.1, random_state=13)
+train_X, val_X, train_Y, val_Y = train_test_split(train_images, train_images, test_size=0.2, random_state=13)
 # Shapes of training set
 print("Training images shape: {shape}".format(shape=train_X.shape))
 print("Validation images shape: {shape}".format(shape=val_X.shape))
@@ -89,7 +89,7 @@ if not continue_from_checkpoint:
     data_iter = dataset.make_initializable_iterator()
     data_iter_init = data_iter.make_initializer(dataset, name='Data_itr_init')
     next_batch = data_iter.get_next()
-    decoder = autoencoder_model_db.get_model_1(next_batch[0], 'Encoder', 'Decoder')
+    decoder = autoencoder_model_db.get_model_2(next_batch[0], 'Encoder', 'Decoder')
     loss = tf.reduce_mean(tf.squared_difference(decoder, next_batch[1]), name='Loss')
     train_op = tf.train.AdamOptimizer(learning_rate=learning_rate, name='Train_op').minimize(loss=loss)
     # Tensorboard variables initialization
@@ -134,6 +134,11 @@ else:
     imported_meta.restore(sess, os.path.splitext(load_model_path)[0])
 
 if mode == 'train':
+    # check max epochs for continue training
+    if each_epoch >= max_epochs:
+        print('Max epoch count already reached! please change the max limit and retry')
+        assert each_epoch < max_epochs
+
     # Tensorboard writer
     summ_writer_train = tf.summary.FileWriter(out_path_train_tb, graph=sess.graph)
     summ_writer_val = tf.summary.FileWriter(out_path_val_tb, graph=sess.graph)
@@ -153,7 +158,6 @@ if mode == 'train':
             print('Training...')
         sess.run('Data_itr_init', feed_dict={"Model_in:0": train_X, "Model_out:0": train_Y})
         while iteration < max_teration:
-            print(iteration)
             _, iteration_loss = sess.run(['Train_op', 'Loss:0'])
             iteration += 1
             itr_count_tb += 1
@@ -223,8 +227,6 @@ if mode == 'train':
         each_epoch += 1
 
 if mode == 'test':
-    for t in tf.get_default_graph().get_operations():
-        print(t.name)
     sess.run('Data_itr_init', feed_dict={"Model_in:0": val_X, "Model_out:0": val_Y})
     in_img, out_img = sess.run(['IteratorGetNext:0', 'Decoder/LeakyRelu:0'])
     sample_no = np.random.randint(0, batchsize - 1, 1)
