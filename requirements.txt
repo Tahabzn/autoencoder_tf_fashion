@@ -5,4 +5,4 @@ opencv_python == 4.0.0.21
 progressbar == 2.5
 progressbar2 == 3.38.0
 scikit_learn == 0.20.2
-
+tensorboard == 1.12.2
