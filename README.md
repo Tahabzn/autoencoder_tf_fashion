@@ -43,6 +43,3 @@ python autoencoder.py -h
 ```
 tensorboard --logdir='./out/'
 ```
-
-### Future work
-1. Compare the results of image classifications with and without autoencoders and show the potential application of CAE.
