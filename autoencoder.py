@@ -47,10 +47,10 @@ batchsize = 64
 learning_rate = 0.001
 if args.model:
     continue_from_checkpoint = True
-    load_model_path = args.model  # './out/Training__20190407_154622/autoencoder_best.meta'
+    load_model_path = args.model  # './out/autoencoder/Training__20190407_154622/autoencoder_best.meta'
 else:
     continue_from_checkpoint = False
-final_model_path = './out/autoencoder.meta'
+final_model_path = './out/autoencoder/autoencoder.meta'
 
 # Dataset Preparation
 train_images = fashion_mnist_utils.extract_images('./data/train-images-idx3-ubyte.gz', 60000)
@@ -67,7 +67,7 @@ print("Test images shape: {shape}".format(shape=test_images.shape))
 # Out folder creation
 out_path, out_file_name = os.path.split(final_model_path)
 if continue_from_checkpoint:
-    out_path = os.path.join(out_path, load_model_path.split(os.sep)[2])
+    out_path = os.path.join(out_path, load_model_path.split(os.sep)[-2])
     out_path_train_tb = os.path.join(out_path, 'train_log')
     out_path_val_tb = os.path.join(out_path, 'val_log')
     print('Out folder {} is used for logging & model saving'.format(out_path))
