@@ -1,0 +1,3 @@
+model_checkpoint_path: "classifier_latest"
+all_model_checkpoint_paths: "classifier_best"
+all_model_checkpoint_paths: "classifier_latest"

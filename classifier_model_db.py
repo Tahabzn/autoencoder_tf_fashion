@@ -3,7 +3,7 @@ import re
 import os
 
 
-def get_model_1(model_in, prediction_lname, load_auto_path, is_training):
+def get_model_1(model_in, prediction_lname, load_auto_path):
     current_graph = tf.get_default_graph()
     temp_graph = tf.Graph()
     auto_in = tf.contrib.copy_graph.copy_op_to_graph(model_in, temp_graph, [])
@@ -33,7 +33,7 @@ def get_model_1(model_in, prediction_lname, load_auto_path, is_training):
     print(tf_out.shape)
     tf_out = tf.layers.Dense(128, activation=tf.nn.leaky_relu, name='Dense_1')(tf_out)
     print(tf_out.shape)
-    tf_out = tf.layers.Dense(10, activation=tf.identity if is_training else tf.nn.softmax, name=prediction_lname)(tf_out)
+    tf_out = tf.layers.Dense(10, activation=tf.identity, name=prediction_lname)(tf_out)
     print(tf_out.shape)
     return tf_out, auto_init_op, auto_init_feed_dict_new
 
