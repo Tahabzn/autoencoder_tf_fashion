@@ -25,8 +25,10 @@ cont_p.add_argument('--model', '-m', type=str,
 auto_p = subparsers_auto_p.add_parser('start', help=' to start a new training')
 auto_p.add_argument('-a', '--autoencoder', type=str,
                     help='path to pre-trained autoencoder (.meta file)', required=True)
-auto_p.add_argument('--init-random', '-r', action='store_true', help='initialize random weights to encoder (.meta file)'
+auto_g = auto_p.add_mutually_exclusive_group()
+auto_g.add_argument('--init-random', '-r', action='store_true', help='initialize random weights to encoder (.meta file)'
                                                                      'instead of pre-trained weights')
+auto_g.add_argument('--trainable', '-t', action='store_true', help='make encoder weights trainable')
 # test command
 test_p = subparsers.add_parser('test', help='to test the model')
 test_p.add_argument('--model', '-m', type=str, help='path to pre-trained model (.meta file)', required=True)
@@ -46,9 +48,18 @@ def display_prediction(img, label, prediction):
     plt.show()
 
 
+def get_classifier_var():
+    opt_list = []
+    var_names = [var.name for var in varlist]
+    for each in tf.global_variables():
+        if each.name not in var_names:
+            opt_list.append(each)
+            return opt_list
+
+
 # Training Parameters
 mode = args.mode
-max_epochs = 50
+max_epochs = 200
 batchsize = 64
 learning_rate = 0.001
 if args.mode == 'train':
@@ -59,6 +70,7 @@ if args.mode == 'train':
         continue_from_checkpoint = False
         load_auto_path = args.autoencoder  # './out/autoencoder/sample/autoencoder_best.meta'
         init_auto_weights_rand = args.init_random
+        trainable_auto = args.trainable
 else:
     continue_from_checkpoint = True
     load_model_path = args.model  # './out/classifier/sample/classifier_best.meta'
@@ -106,18 +118,23 @@ if not continue_from_checkpoint:
     img_classifier, varlist = classifier_model_db.get_model_1(next_batch[0], 'Predictor', load_auto_path)
     loss = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits_v2(labels=next_batch[1],
                                                                      logits=img_classifier), name='Loss')
-    train_op = tf.train.AdamOptimizer(learning_rate=learning_rate, name='Train_op').minimize(loss=loss)
+    opt_list = get_classifier_var()
+    if init_auto_weights_rand or trainable_auto:
+        opt_list = None
+        print('Enocder is made trainable')
+    train_op = tf.train.AdamOptimizer(learning_rate=learning_rate, name='Train_op').minimize(loss=loss,
+                                                                                             var_list=opt_list)
     # Tensorboard variables initialization
     with tf.name_scope('performance'):
         tf_itr_loss_ph = tf.placeholder(dtype=tf.float32, shape=None, name='Tf_itr_loss_ph')
         tf_itr_loss_summary = tf.summary.scalar('Loss_itr', tf_itr_loss_ph)
         tf_epoch_loss_ph = tf.placeholder(dtype=tf.float32, shape=None, name='Tf_epoch_loss_ph')
         tf_epoch_loss_summary = tf.summary.scalar('Loss_epoch', tf_epoch_loss_ph)
-    print('Model newly created')
+    print('Classifier Model newly created')
 else:
     tf.reset_default_graph()
     imported_meta = tf.train.import_meta_graph(load_model_path)
-    print('Model loaded from checkpoint ' + load_model_path)
+    print('Classifier Model loaded from checkpoint ' + load_model_path)
 
 # Model training
 saver = tf.train.Saver()
