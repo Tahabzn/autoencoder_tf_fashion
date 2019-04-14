@@ -98,11 +98,11 @@ if not continue_from_checkpoint:
         tf_itr_loss_summary = tf.summary.scalar('Loss_itr', tf_itr_loss_ph)
         tf_epoch_loss_ph = tf.placeholder(dtype=tf.float32, shape=None, name='Tf_epoch_loss_ph')
         tf_epoch_loss_summary = tf.summary.scalar('Loss_epoch', tf_epoch_loss_ph)
-    print('Model newly created')
+    print('Autoencoder Model newly created')
 else:
     tf.reset_default_graph()
     imported_meta = tf.train.import_meta_graph(load_model_path)
-    print('Model loaded from checkpoint ' + load_model_path)
+    print('Autoencoder Model loaded from checkpoint ' + load_model_path)
 
 # Model summary
 decoder_shape = tf.get_default_graph().get_tensor_by_name('Decoder/LeakyRelu:0').shape
