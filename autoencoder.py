@@ -47,7 +47,7 @@ batchsize = 64
 learning_rate = 0.001
 if args.model:
     continue_from_checkpoint = True
-    load_model_path = args.model  # './out/autoencoder/Training__20190407_154622/autoencoder_best.meta'
+    load_model_path = args.model  # './out/autoencoder/sample/autoencoder_latest.meta'
 else:
     continue_from_checkpoint = False
 final_model_path = './out/autoencoder/autoencoder.meta'

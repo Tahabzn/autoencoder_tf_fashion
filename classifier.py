@@ -39,25 +39,6 @@ def save_model_epoch(comment):
     saver.save(sess, os.path.join(out_path, model_filename))
 
 
-def save_auto_dict():
-    values = np.array(list(auto_init_feed_dict.values()))
-    values = values.reshape(values.size, 1)
-    keys = np.array([k.name for k in auto_init_feed_dict.keys()])
-    keys = keys.reshape(keys.size, 1)
-    auto_weights = np.concatenate((keys, values), axis=-1)
-    np.save(os.path.join(out_path, 'auto_weights'), auto_weights)
-
-
-def load_auto_dict():
-    auto_weights = np.load(os.path.join(out_path, 'auto_weights.npy'))
-    auto_init_feed_dict = {}
-    for i in range(auto_weights.shape[0]):
-        key = tf.get_default_graph().get_tensor_by_name(auto_weights[i, 0])
-        value = auto_weights[i, 1]
-        auto_init_feed_dict[key] = value
-    return auto_init_feed_dict
-
-
 def display_prediction(img, label, prediction):
     label_dict = fashion_mnist_utils.get_label_dict()
     plt.title('Image lable ={} pred ={}'.format(label_dict[label], label_dict[prediction]))
@@ -73,14 +54,14 @@ learning_rate = 0.001
 if args.mode == 'train':
     if args.training_mode == 'continue':
         continue_from_checkpoint = True
-        load_model_path = args.model  # './out/classifier/Training__20190407_154622/classifier_best.meta'
+        load_model_path = args.model  # './out/classifier/sample/classifier_latest.meta'
     else:
         continue_from_checkpoint = False
-        load_auto_path = args.autoencoder
-        init_weights_auto = args.init_random
+        load_auto_path = args.autoencoder  # './out/autoencoder/sample/autoencoder_best.meta'
+        init_auto_weights_rand = args.init_random
 else:
     continue_from_checkpoint = True
-    load_model_path = args.model  # './out/classifier/Training__20190407_154622/classifier_best.meta'
+    load_model_path = args.model  # './out/classifier/sample/classifier_best.meta'
 
 final_model_path = './out/classifier/classifier.meta'
 
@@ -122,9 +103,7 @@ if not continue_from_checkpoint:
     data_iter = dataset.make_initializable_iterator()
     data_iter_init = data_iter.make_initializer(dataset, name='Data_itr_init')
     next_batch = data_iter.get_next()
-    img_classifier, auto_init_op, auto_init_feed_dict = classifier_model_db.get_model_1(next_batch[0],
-                                                                                        'Predictor',
-                                                                                        load_auto_path)
+    img_classifier, varlist = classifier_model_db.get_model_1(next_batch[0], 'Predictor', load_auto_path)
     loss = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits_v2(labels=next_batch[1],
                                                                      logits=img_classifier), name='Loss')
     train_op = tf.train.AdamOptimizer(learning_rate=learning_rate, name='Train_op').minimize(loss=loss)
@@ -160,13 +139,15 @@ else:
 sess = tf.Session()
 if not continue_from_checkpoint:
     sess.run(tf.global_variables_initializer())
-    sess.run(auto_init_op, feed_dict=auto_init_feed_dict)
-    save_auto_dict()
+    # loading pretrained weights of encoder
+    if not init_auto_weights_rand:
+        auto_saver = tf.train.Saver(varlist)
+        auto_saver.restore(sess, os.path.splitext(load_auto_path)[0])
+        print('Encoder weights are loaded from {}'.format(load_auto_path))
+    else:
+        print('Encoder weights are randomly initialized')
 else:
     imported_meta.restore(sess, os.path.splitext(load_model_path)[0])
-    # auto weights loading
-    auto_init_feed_dict = load_auto_dict()
-    sess.run("group_deps", feed_dict=auto_init_feed_dict)
 
 if mode == 'train':
     # check max epochs for continue training
