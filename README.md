@@ -43,3 +43,6 @@ python autoencoder.py -h
 ```
 tensorboard --logdir='./out/'
 ```
+
+### Work in progress
+Classifier implementation with the encoder as feature extractor.
