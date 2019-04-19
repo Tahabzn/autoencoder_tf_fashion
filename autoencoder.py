@@ -9,7 +9,6 @@ import tensorflow as tf
 import fashion_mnist_utils
 import autoencoder_model_db
 import argparse
-from sklearn.model_selection import train_test_split
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--verbose', '-v', action='store_true', help='verbose flag')
@@ -53,16 +52,13 @@ else:
 final_model_path = './out/autoencoder/autoencoder.meta'
 
 # Dataset Preparation
-train_images = fashion_mnist_utils.extract_images('./data/train-images-idx3-ubyte.gz', 60000)
-test_images = fashion_mnist_utils.extract_images('./data/t10k-images-idx3-ubyte.gz', 10000)
-train_labels = fashion_mnist_utils.extract_labels('./data/train-labels-idx1-ubyte.gz', 60000)
-test_labels = fashion_mnist_utils.extract_labels('./data/t10k-labels-idx1-ubyte.gz', 10000)
-train_X, val_X, train_Y, val_Y = train_test_split(train_images, train_images, test_size=0.2, random_state=13)
+train_X = fashion_mnist_utils.extract_images('./data/train-images-idx3-ubyte.gz', 60000)
+val_X = fashion_mnist_utils.extract_images('./data/t10k-images-idx3-ubyte.gz', 10000)
+train_Y = fashion_mnist_utils.extract_labels('./data/train-labels-idx1-ubyte.gz', 60000)
+val_Y = fashion_mnist_utils.extract_labels('./data/t10k-labels-idx1-ubyte.gz', 10000)
 # Shapes of training set
 print("Training images shape: {shape}".format(shape=train_X.shape))
 print("Validation images shape: {shape}".format(shape=val_X.shape))
-print("Test images shape: {shape}".format(shape=test_images.shape))
-
 
 # Out folder creation
 out_path, out_file_name = os.path.split(final_model_path)
